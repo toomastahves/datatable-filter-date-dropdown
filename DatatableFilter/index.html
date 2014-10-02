@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="Content/jquery-1.11.1.min.js"></script>
+    <script src="Content/jquery.dataTables.min.js"></script>
+    <script src="Content/date-eu.js"></script>
+    <link href="Content/jquery.dataTables.css" rel="stylesheet" />
+</head>
+<body>
+    <table border="0" cellspacing="5" cellpadding="5">
+        <tbody>
+            <tr>
+                <td>Valjaanne:</td>
+                <td>
+                    <select id="productname" name="productname">
+                        <option value="0">Kõik</option>
+                        <option value="AP">AP</option>
+                        <option value="ITEAD">ITEAD</option>
+                        <option value="WAP">WAP</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Kehtivus:</td>
+                <td>
+                    <select id="orderdate" name="orderdate">
+                        <option value="0">Kõik</option>
+                        <option value="1">Kehtivad</option>
+                        <option value="-1">Ei kehti</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table><table id="example" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>AP</td>
+                <td>2</td>
+                <td>03/05/2015</td>
+            </tr>
+            <tr>
+                <td>WAP</td>
+                <td>2</td>
+                <td>03/10/2014</td>
+            </tr>
+            <tr>
+                <td>WAP</td>
+                <td>5</td>
+                <td>02/10/2014</td>
+            </tr>
+            <tr>
+                <td>ITEAD</td>
+                <td>5</td>
+                <td>01/10/2014</td>
+            </tr>
+            <tr>
+                <td>ITEAD</td>
+                <td>5</td>
+                <td>22/04/2011</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+<script>
+    
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var filter_parameter = $('#productname').val();
+            if (filter_parameter == 0) return true;
+            var productnames = data[0];
+            if (filter_parameter == productnames) {
+                return true;
+            }
+            return false;
+        }
+
+    );
+
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        // Get Current date 
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth() + 1; //January is 0!
+        var yyyy = today.getFullYear();
+        if (dd < 10) {
+            dd = '0' + dd
+        }
+        if (mm < 10) {
+            mm = '0' + mm
+        }
+        var filterdate = dd + '/' + mm + '/' + yyyy; // Current date
+
+        // Get dates from table
+        var orderdates = data[2];
+        var filter_parameter = $('#orderdate').val();
+
+        // Compare dates
+        var comparison_result = fn_DateCompare(filterdate, orderdates);
+        if (filter_parameter == 1) {
+            var result = comparison_result ? true : false
+            return result;
+        } else if (filter_parameter == -1) {
+            var result = comparison_result ? false : true
+            return result;
+        } else {
+            return true;
+        }
+        
+
+    });
+
+    function fn_DateCompare(DateA, DateB) {     // this function is good for dates > 01/01/1970
+
+        var a = new Date(DateA);
+        var b = new Date(DateB);
+
+        var msDateA = Date.UTC(a.getFullYear(), a.getMonth() + 1, a.getDate());
+        console.log("u "+msDateA);
+        var msDateB = Date.UTC(b.getFullYear(), b.getMonth() + 1, b.getDate());
+
+        if (parseFloat(msDateA) < parseFloat(msDateB))
+            return -1;  // lt
+        else if (parseFloat(msDateA) == parseFloat(msDateB))
+            return 0;  // eq
+        else if (parseFloat(msDateA) > parseFloat(msDateB))
+            return 1;  // gt
+        else
+            return null;  // error
+    }
+
+    $(document).ready(function () {
+        var table = $('#example').DataTable({
+            "bFilter": true,
+            "bLengthChange": false,
+            "iDisplayLength": 25
+        });
+
+        // Event listener to the two range filtering inputs to redraw on input
+        $('#productname, #orderdate').change(function () {
+            table.draw();
+        });
+
+        $('#example_filter').hide();
+    });
+</script>
